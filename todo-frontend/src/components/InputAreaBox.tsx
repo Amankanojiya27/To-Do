@@ -5,69 +5,71 @@ import axios from "axios";
 import { FaRegEdit } from "react-icons/fa";
 import { MdOutlineDelete, MdOutlineSystemUpdateAlt } from "react-icons/md";
 import { IoMdAddCircleOutline } from "react-icons/io";
-import { Task } from "@/types/task";
 
-const API_URL = "http://localhost:5000/api/tasks";
+const API_URL = "http://localhost:5000/api";
+
+interface Task {
+  _id: string;
+  title: string;
+  text: string;
+}
 
 export default function InputAreaBox() {
   const [inputTitle, setInputTitle] = useState<string>("");
+  const [inputText, setInputText] = useState<string>("");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editId, setEditId] = useState<string | null>(null);
 
-  // Fetch tasks from backend
-  useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const response = await axios.get<{ data: Task[] }>(API_URL);
-        setTasks(response.data.data);
-      } catch (error) {
-        console.error("Error fetching tasks:", error);
-      }
-    };
+  // 🔹 Fetch tasks from backend
+  const fetchTasks = async () => {
+    try {
+      const response = await axios.get<Task[]>(`${API_URL}/getAllTasks`);
+      setTasks(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+    }
+  };
 
+  useEffect(() => {
     fetchTasks();
   }, []);
 
-  // Add or Update Task
+  // 🔹 Add or Update Task
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!inputTitle.trim()) return;
+    if (!inputTitle.trim() || !inputText.trim()) return;
 
     try {
       if (isEditing && editId) {
-        // Update Task
-        await axios.put(`${API_URL}/${editId}`, { title: inputTitle });
-        setTasks((prev) =>
-          prev.map((task) =>
-            task._id === editId ? { ...task, title: inputTitle } : task
-          )
-        );
+        await axios.patch(`${API_URL}/updateTask/${editId}`, { title: inputTitle, text: inputText });
         setIsEditing(false);
         setEditId(null);
       } else {
-        // Add Task
-        const response = await axios.post<Task>(API_URL, { title: inputTitle });
-        setTasks([...tasks, response.data]);
+        await axios.post<Task>(`${API_URL}/addTask`, { title: inputTitle, text: inputText });
       }
       setInputTitle("");
+      setInputText("");
+      fetchTasks(); // ✅ Refresh task list after action
     } catch (error) {
       console.error("Error adding/updating task:", error);
     }
   };
 
-  // Edit Task
-  const handleEdit = (id: string, title: string) => {
+  // 🔹 Edit Task
+  const handleEdit = (id: string, title: string, text: string) => {
+    console.log("Editing Task:", id, title, text); // ✅ Debug log
     setInputTitle(title);
+    setInputText(text);
     setIsEditing(true);
     setEditId(id);
   };
 
-  // Delete Task
+  // 🔹 Delete Task
   const handleDelete = async (id: string) => {
     try {
-      await axios.delete(`${API_URL}/${id}`);
-      setTasks(tasks.filter((task) => task._id !== id));
+      await axios.delete(`${API_URL}/deleteTask/${id}`);
+      fetchTasks(); // ✅ Refresh task list after delete
     } catch (error) {
       console.error("Error deleting task:", error);
     }
@@ -75,10 +77,8 @@ export default function InputAreaBox() {
 
   return (
     <div className="flex flex-col items-center">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white shadow-md p-4 rounded-lg w-full max-w-lg"
-      >
+      {/* 🔹 Input Form */}
+      <form onSubmit={handleSubmit} className="bg-white shadow-md p-4 rounded-lg w-full max-w-lg">
         <input
           type="text"
           placeholder="Title"
@@ -86,24 +86,25 @@ export default function InputAreaBox() {
           value={inputTitle}
           onChange={(e) => setInputTitle(e.target.value)}
         />
+        <textarea
+          placeholder="Take a note..."
+          className="w-full border p-2 rounded-md text-lg focus:outline-none mb-2"
+          value={inputText}
+          onChange={(e) => setInputText(e.target.value)}
+        />
         <button className="bg-orange-500 text-white rounded-full p-3 flex justify-center items-center mx-auto shadow-lg">
-          {isEditing ? (
-            <MdOutlineSystemUpdateAlt className="text-2xl" />
-          ) : (
-            <IoMdAddCircleOutline className="text-2xl" />
-          )}
+          {isEditing ? <MdOutlineSystemUpdateAlt className="text-2xl" /> : <IoMdAddCircleOutline className="text-2xl" />}
         </button>
       </form>
 
+      {/* 🔹 Task List */}
       <div className="flex flex-wrap gap-4 mt-6">
         {tasks.map((task) => (
-          <div
-            key={task._id}
-            className="bg-white shadow-md p-4 rounded-md max-w-sm"
-          >
+          <div key={task._id} className="bg-white shadow-md p-4 rounded-md max-w-sm">
             <h1 className="text-lg font-semibold">{task.title}</h1>
+            <p className="text-gray-600">{task.text}</p>
             <div className="flex justify-between items-center mt-2">
-              <button onClick={() => handleEdit(task._id, task.title)}>
+              <button onClick={() => handleEdit(task._id, task.title, task.text)}>
                 <FaRegEdit className="text-blue-500 text-xl" />
               </button>
               <button onClick={() => handleDelete(task._id)}>

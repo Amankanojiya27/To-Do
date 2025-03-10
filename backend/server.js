@@ -1,15 +1,22 @@
 import express from "express";
+import cors from "cors";
 import connectDB from "./config/db.js"; 
 import taskRoutes from "./router/taskRoutes.js"; 
 
 const app = express();
 
-app.use(express.json());
+// Middleware
+app.use(cors()); // Enable CORS
+app.use(express.json()); // Parse JSON request bodies
 
+// Connect to Database
 connectDB();
 
+// Routes
 app.use("/api", taskRoutes);
 
-const port = 5000;
+const PORT = 5000;
 
-app.listen(port, () => console.log(`Server is running on http://localhost:${port}`));
+app.listen(PORT, () => {
+  console.log(`✅ Server running at: http://localhost:${PORT}/api`);
+});
