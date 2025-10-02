@@ -1,6 +1,12 @@
+// types/task.ts
 export interface Task {
   _id: string;
   title: string;
   text: string;
-  status?: boolean;
+  category?: string;
+  priority?: string;
+  dueDate?: string;
+  completed?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }

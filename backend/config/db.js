@@ -2,12 +2,14 @@ import mongoose from "mongoose";
 
 const connectDB = async () => {
   try {
-    await mongoose.connect("mongodb://localhost:27017/todoapp", {
+    const conn = await mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/taskmanager", {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
     });
-    console.log("MongoDB Connected");
+    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
-    console.error("Database Connection Error:", error);
-    process.exit(1);
+    console.error("❌ Failed to connect to MongoDB:", error.message);
+    process.exit(1); // Exit process with failure
   }
 };
 

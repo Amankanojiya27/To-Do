@@ -5,14 +5,14 @@ import axios from "axios";
 import { FaRegEdit } from "react-icons/fa";
 import { MdOutlineDelete, MdOutlineSystemUpdateAlt } from "react-icons/md";
 import { IoMdAddCircleOutline } from "react-icons/io";
+import {Task} from "@/types/task"
+import { API_URL } from "@/api";
 
-const API_URL = "http://localhost:5000/api";
-
-interface Task {
-  _id: string;
-  title: string;
-  text: string;
-}
+// interface Task {
+//   _id: string;
+//   title: string;
+//   text: string;
+// }
 
 export default function InputAreaBox() {
   const [inputTitle, setInputTitle] = useState<string>("");
